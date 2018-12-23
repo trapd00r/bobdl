@@ -6,7 +6,7 @@ use vars     qw($VERSION);
 use autodie  qw(:all);
 
 my $APP  = 'bobdl';
-$VERSION = '0.001';
+$VERSION = '0.002';
 
 # flexget was too complicated so I wrote this. :p
 
@@ -19,12 +19,16 @@ my $rss = 'http://showrss.info/user/198707.rss?magnets=true&namespaces=true&name
 my $feed = XML::FeedPP->new($rss);
 
 my $torrent_dir = "$ENV{HOME}/Downloads";
+my $logfile     = "$ENV{XDG_DATA_HOME}/bobdl.log";
 
+open(my $fh, '>>', $logfile) or die("Can't open '$logfile': $!\n");
 
 for my $item($feed->get_item()) {
-#  print $item->link, "\n\n";
+  printf("- dl: %s\n", $item->title);
+  print $fh $item->title, "\n";
   my $torrent_file = sprintf("$torrent_dir/%s.torrent", time());
   system('magnet2torrent', $item->link, $torrent_file);
-  warn $? if $?;
   printf "%s created.\n", ls_color($torrent_file);
 }
+
+close $fh or die "$!\n";
