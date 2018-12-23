@@ -1,0 +1,30 @@
+#!/usr/bin/perl
+# vim: ft=perl:fdm=marker:fmr=#<,#>:fen:et:sw=2:
+use strict;
+use warnings FATAL => 'all';
+use vars     qw($VERSION);
+use autodie  qw(:all);
+
+my $APP  = 'bobdl';
+$VERSION = '0.001';
+
+# flexget was too complicated so I wrote this. :p
+
+
+use XML::FeedPP;
+use File::LsColor qw(ls_color);
+
+my $rss = 'http://showrss.info/user/198707.rss?magnets=true&namespaces=true&name=null&quality=null&re=null';
+
+my $feed = XML::FeedPP->new($rss);
+
+my $torrent_dir = "$ENV{HOME}/Downloads";
+
+
+for my $item($feed->get_item()) {
+#  print $item->link, "\n\n";
+  my $torrent_file = sprintf("$torrent_dir/%s.torrent", time());
+  system('magnet2torrent', $item->link, $torrent_file);
+  warn $? if $?;
+  printf "%s created.\n", ls_color($torrent_file);
+}

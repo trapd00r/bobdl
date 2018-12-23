@@ -1,0 +1,4 @@
+MANIFEST
+Makefile.PL
+bin/bobdl
+bin/magnet2torrent

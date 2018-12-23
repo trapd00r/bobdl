@@ -1,0 +1,5 @@
+flexget was too complicated so I wrote this.
+
+- fetches magnet uris from showrss
+- converts to torrent files
+- rtorrent auto-loads torrent files from dl dir
