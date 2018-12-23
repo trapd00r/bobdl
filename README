@@ -1,5 +1,13 @@
-flexget was too complicated so I wrote this.
+Me and my girl uses a boxeebox named bob. Having to check if there's a
+new $episode foreach $show is getting increasingly daunting.
 
-- fetches magnet uris from showrss
-- converts to torrent files
-- rtorrent auto-loads torrent files from dl dir
+Here's a solution since flexget was way too complicated:
+
+- We populate the showrss feed with every show we watch.
+  The base url doesn't change, only the content.
+- We parse that dreadful xml and extract the magnet uri for each entry.
+- The magnet uri is converted to a torrent file so we can auto-load it in rtorrent
+
+= our friend Bob is always populated with new content and I never have
+  to check manually ever again.
+
