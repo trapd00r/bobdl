@@ -4,31 +4,102 @@ use strict;
 use warnings FATAL => 'all';
 use vars     qw($VERSION);
 use autodie  qw(:all);
+no warnings 'experimental::smartmatch';
 
 my $APP  = 'bobdl';
-$VERSION = '0.002';
+$VERSION = '0.010';
 
 # flexget was too complicated so I wrote this. :p
 
 
 use XML::FeedPP;
-use File::LsColor qw(ls_color);
+use Term::ExtendedColor qw(fg bg bold);
+use Getopt::Long;
+use Data::Dumper;
 
-my $rss = 'http://showrss.info/user/198707.rss?magnets=true&namespaces=true&name=null&quality=null&re=null';
+my $rss         = 'http://showrss.info/user/198707.rss?magnets=true&namespaces=true&name=null&quality=null&re=null';
+my $pidfile     = "$ENV{XDG_DATA_HOME}/bobdl.pid";
+my $torrent_dir = "$ENV{HOME}/Downloads/_torrent";
+my $logfile     = "$ENV{XDG_DATA_HOME}/bobdl.log";
+
+
+my $opt_no_daemon;
+GetOptions(
+  'n|no-daemon' => \$opt_no_daemon,
+  'h|help'      => '',
+);
+
+
 
 my $feed = XML::FeedPP->new($rss);
 
-my $torrent_dir = "$ENV{HOME}/Downloads";
-my $logfile     = "$ENV{XDG_DATA_HOME}/bobdl.log";
+open(my $fhr, '<', $logfile) or die $!;
+chomp(my @downloaded = <$fhr>);
+close $fhr;
 
-open(my $fh, '>>', $logfile) or die("Can't open '$logfile': $!\n");
+
+open(my $fhw, '>>', $logfile) or die $!;
 
 for my $item($feed->get_item()) {
-  printf("- dl: %s\n", $item->title);
-  print $fh $item->title, "\n";
-  my $torrent_file = sprintf("$torrent_dir/%s.torrent", time());
-  system('magnet2torrent', $item->link, $torrent_file);
-  printf "%s created.\n", ls_color($torrent_file);
+  my $title = $item->title;
+  my $link  = $item->link;
+
+  if($title ~~ @downloaded) {
+    printf("OLD: %s\n", fg(238, $title));
+    next;
+  }
+
+  else {
+    download($link, $title);
+    print $fhw "$title\n";
+  }
 }
 
-close $fh or die "$!\n";
+close $fhw;
+
+
+sub download {
+  my $magnet = shift;
+  my $title  = shift;
+
+  system('mag2tor', $magnet);
+#    system('magnet2torrent', $magnet, "$torrent_dir/$title.torrent", '&>/dev/null');
+  printf("NEW: %s\n", fg(208, bold($title)));
+}
+
+
+
+sub daemonize {
+  use POSIX 'setsid';
+  my $pid = fork();
+  exit 0 if $pid;
+  exit 1 if ! defined $pid;
+
+  setsid();
+  $pid = fork();
+  exit 1 if ! defined $pid;
+
+  if($pid) {
+    waitpid($pid, 0);
+    unlink $pidfile;
+    exit 0;
+  }
+  elsif($pid == 0) {
+    my $PID;
+    open($PID, '>', $pidfile) or die "Cant create pidfile $pidfile: $!";
+    print $PID $$;
+    close $PID;
+
+    #open(STDOUT, '>', $log);
+    open(STDERR, '>', '/dev/null');
+    open(STDIN,  '>', '/dev/null');
+  }
+}
+
+
+
+# #!/bin/bash
+# watch_folder=~/.rtorrent/watch
+# cd $watch_folder
+# [[ "$1" =~ xt=urn:btih:([^&/]+) ]] || exit;
+# echo "d10:magnet-uri${#1}:${1}e" > "meta-${BASH_REMATCH[1]}.torrent"

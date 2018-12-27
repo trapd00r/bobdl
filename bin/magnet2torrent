@@ -50,18 +50,18 @@ def magnet2torrent(magnet, output_name=None):
     }
     handle = lt.add_magnet_uri(ses, magnet, params)
 
-    print("Downloading Metadata (this may take a while)")
+#    print("Downloading Metadata (this may take a while)")
     while (not handle.has_metadata()):
         try:
             sleep(1)
         except KeyboardInterrupt:
-            print("Aborting...")
+#            print("Aborting...")
             ses.pause()
-            print("Cleanup dir " + tempdir)
+#            print("Cleanup dir " + tempdir)
             shutil.rmtree(tempdir)
             sys.exit(0)
     ses.pause()
-    print("Done")
+#    print("Done")
 
     torinfo = handle.get_torrent_info()
     torfile = lt.create_torrent(torinfo)
@@ -75,12 +75,12 @@ def magnet2torrent(magnet, output_name=None):
         elif pt.isdir(pt.dirname(pt.abspath(output_name))):
             output = pt.abspath(output_name)
 
-    print("Saving torrent file here : " + output + " ...")
+#    print("Saving torrent file here : " + output + " ...")
     torcontent = lt.bencode(torfile.generate())
     f = open(output, "wb")
     f.write(lt.bencode(torfile.generate()))
     f.close()
-    print("Saved! Cleaning up dir: " + tempdir)
+#    print("Saved! Cleaning up dir: " + tempdir)
     ses.remove_torrent(handle)
     shutil.rmtree(tempdir)
 

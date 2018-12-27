@@ -10,7 +10,7 @@ WriteMakefile1(
     },
   },
 
-  NAME             => q{File::LsColor},
+  NAME             => q{App::bobdl},
   AUTHOR           => q{Magnus Woldrich <m@japh.se>},
   ABSTRACT         => q{bobdl},
   VERSION_FROM     => q{bin/bobdl},
